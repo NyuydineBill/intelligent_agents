@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Intelligent Campus Navigation Agent</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <h1>Intelligent Campus Navigation Agent</h1>
+  <div class="header-badges">
+    <span class="badge badge-blue">Goal-Based Agent</span>
+    <span class="badge badge-purple">Dijkstra &amp; A*</span>
+    <span class="badge badge-green">PEAS Framework</span>
+  </div>
+</header>
+
+<!-- App layout -->
+<div class="app-layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+
+    <!-- Current location -->
+    <div class="panel">
+      <div class="panel-title">Sensor — Current Location</div>
+      <label for="current-location">Where are you now?</label>
+      <select id="current-location">
+        <option value="">Loading…</option>
+      </select>
+    </div>
+
+    <!-- Schedule -->
+    <div class="panel">
+      <div class="panel-title">Sensor — Class Schedule</div>
+      <div id="schedule-list"></div>
+      <button class="btn-add" onclick="addScheduleRow()">+ Add Class</button>
+    </div>
+
+    <!-- Preference -->
+    <div class="panel">
+      <div class="panel-title">Sensor — Route Preference</div>
+      <div class="radio-group">
+        <label class="radio-option">
+          <input type="radio" name="preference" value="shortest" />
+          <span>Shortest Distance</span>
+        </label>
+        <label class="radio-option">
+          <input type="radio" name="preference" value="fastest" />
+          <span>Fastest Route</span>
+        </label>
+        <label class="radio-option">
+          <input type="radio" name="preference" value="least_stressful" />
+          <span>Least Stressful</span>
+        </label>
+        <label class="radio-option selected">
+          <input type="radio" name="preference" value="balanced" checked />
+          <span>Balanced</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Algorithm -->
+    <div class="panel">
+      <div class="panel-title">Algorithm Selection</div>
+      <div class="radio-group">
+        <label class="radio-option selected">
+          <input type="radio" name="algorithm" value="dijkstra" checked />
+          <span>Dijkstra's Algorithm</span>
+        </label>
+        <label class="radio-option">
+          <input type="radio" name="algorithm" value="astar" />
+          <span>A* Search</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div>
+      <button class="btn-primary" onclick="navigate()">Find Optimal Route</button>
+      <button class="btn-secondary" onclick="showPEAS()">View PEAS Framework</button>
+    </div>
+
+  </aside>
+
+  <!-- Main content -->
+  <main class="main-content">
+
+    <!-- Campus map canvas -->
+    <div class="top-pane">
+      <div class="pane-header">Campus Map — Interactive Graph</div>
+      <div class="canvas-wrapper">
+        <canvas id="campus-canvas"></canvas>
+        <div id="canvas-tooltip"></div>
+
+        <!-- Legend -->
+        <div class="legend">
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#f59e0b"></div> Entrance
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#8b5cf6"></div> Admin
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#3b82f6"></div> Academic
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#10b981"></div> Service
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#ec4899"></div> Residential
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#f97316"></div> Sports
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#f97316; border-radius:2px;"></div> Route
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results pane -->
+    <div class="bottom-pane">
+      <div class="pane-header">Actuator — Navigation Output</div>
+      <div class="results-inner">
+
+        <!-- Error -->
+        <div id="error-banner" class="error-banner"></div>
+
+        <!-- Loading -->
+        <div id="loading" class="loading">
+          <div class="spinner"></div>
+          Agent is reasoning...
+        </div>
+
+        <!-- Empty state (shown before first navigation) -->
+        <div id="empty-state" class="result-empty">
+          Select your current location and class schedule, then click
+          <strong>Find Optimal Route</strong> to let the agent navigate.
+        </div>
+
+        <!-- Results (hidden until navigation completes) -->
+        <div id="results-content" style="display:none;">
+
+          <!-- Algo + pref info -->
+          <div class="algo-info">
+            <span>Algorithm: <strong id="result-algo" class="algo-badge"></strong></span>
+            <span>Objective: <strong id="result-pref"></strong></span>
+            <span id="result-explored"></span>
+          </div>
+
+          <!-- Metric cards -->
+          <div class="route-summary">
+            <div class="metric-card metric-dist">
+              <div class="metric-value" id="result-distance">—</div>
+              <div class="metric-label">Total Distance</div>
+            </div>
+            <div class="metric-card metric-time">
+              <div class="metric-value" id="result-time">—</div>
+              <div class="metric-label">Travel Time</div>
+            </div>
+            <div class="metric-card metric-stress">
+              <div class="metric-value" id="result-stress">—</div>
+              <div class="metric-label">Stress Score</div>
+            </div>
+          </div>
+
+          <!-- Justification -->
+          <div class="justification-box">
+            <strong>Agent Reasoning — Why this route?</strong>
+            <span id="justification-text"></span>
+          </div>
+
+          <!-- Full route flow -->
+          <div class="route-flow">
+            <h3>Full Route</h3>
+            <div class="route-nodes" id="route-flow-nodes"></div>
+          </div>
+
+          <!-- Segments -->
+          <div class="segments-section">
+            <h3>Step-by-Step Segments</h3>
+            <div id="segments-list"></div>
+          </div>
+
+        </div><!-- /results-content -->
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- PEAS Modal -->
+<div id="peas-modal" class="modal-overlay" onclick="if(event.target===this)closePEAS()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>PEAS Framework &amp; Environment Analysis</h2>
+      <button class="modal-close" onclick="closePEAS()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div id="peas-content">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/app.js"></script>
+
+</body>
+</html>
