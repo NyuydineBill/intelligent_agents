@@ -279,7 +279,7 @@ select:focus, input:focus { border-color: var(--accent); }
 /* Route summary cards */
 .route-summary {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 12px;
   margin-bottom: 18px;
 }
@@ -305,9 +305,10 @@ select:focus, input:focus { border-color: var(--accent); }
   letter-spacing: .5px;
 }
 
-.metric-dist  .metric-value { color: #60a5fa; }
-.metric-time  .metric-value { color: #4ade80; }
+.metric-dist   .metric-value { color: #60a5fa; }
+.metric-time   .metric-value { color: #4ade80; }
 .metric-stress .metric-value { color: #fb923c; }
+.metric-nodes  .metric-value { color: #a78bfa; }
 
 /* Route flow */
 .route-flow {

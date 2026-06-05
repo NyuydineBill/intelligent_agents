@@ -348,9 +348,10 @@ function renderResults(data) {
   el("result-distance").textContent = totals.distance + " m";
   el("result-time").textContent     = totals.time + " min";
   el("result-stress").textContent   = totals.stress;
+  el("result-nodes").textContent    = totals.nodes_explored;
   el("result-algo").textContent     = data.algorithm;
   el("result-pref").textContent     = data.preference;
-  el("result-explored").textContent = `${totals.nodes_explored} nodes explored`;
+  el("result-explored").textContent = "";
 
   // Full route flow
   const flow   = document.getElementById("route-flow-nodes");
