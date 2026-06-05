@@ -26,22 +26,28 @@ def _edge_cost(edge_data: dict, weights: Tuple[float, float, float]) -> float:
     )
 
 
+# Fastest observed walking speed across all edges (e.g. 160 m / 3 min ≈ 53 m/min).
+# Using a slightly higher value keeps the time heuristic admissible.
+_MAX_SPEED_M_PER_MIN = 60.0
+
+
 def _euclidean_heuristic(graph, node: str, goal: str,
                          weights: Tuple[float, float, float]) -> float:
     """
-    Admissible heuristic for A*: straight-line distance in canvas pixels,
-    scaled to the same units as the cost function.
-
-    We use the distance weight component only (h(n) never over-estimates
-    the travel-cost portion due to distance).
+    Admissible heuristic for A*: straight-line distance lower-bounds both
+    the distance cost and the time cost (at max walking speed).  Stress has
+    no geometric lower bound so its component is omitted (h ≤ true cost).
     """
-    w_dist = weights[0]
+    w_dist, w_time, _ = weights
     x1, y1 = graph.nodes[node]["x"], graph.nodes[node]["y"]
     x2, y2 = graph.nodes[goal]["x"],  graph.nodes[goal]["y"]
     pixel_dist = math.hypot(x2 - x1, y2 - y1)
     # canvas logical coords → meters: empirical scale ~0.6 m/px
     meters = pixel_dist * 0.6
-    return w_dist * (meters / 500.0)
+    return (
+        w_dist * (meters / 500.0)
+        + w_time * (meters / (_MAX_SPEED_M_PER_MIN * 10.0))
+    )
 
 
 def _reconstruct_path(previous: Dict, start: str, end: str) -> List[str]:
